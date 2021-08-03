@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+
+    <link rel="shortcut icon" href="/favicon.ico?1">
+    <!-- Begin Jekyll SEO tag v2.5.0 -->
+    <meta name="generator" content="Jekyll v3.8.4" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="description" content="TACO website" />
+    <meta property="og:description" content="TACO website" />
+    <link rel="canonical" href="http://0.0.0.0:4000/annotate.html" />
+    <meta property="og:url" content="http://0.0.0.0:4000/annotate.html" />
+    <script type="application/ld+json">
+        {
+            "description": "TACO website",
+            "@type": "WebPage",
+            "url": "http://0.0.0.0:4000/annotate.html",
+            "@context": "http://schema.org"
+        }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+
+    <link rel="canonical" href="http://0.0.0.0:4000/annotate.html">
+    <link rel="alternate" type="application/rss+xml" title="" href="http://0.0.0.0:4000/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container navbar-container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+                <a class="navbar-brand" href="/">
+                    <span><img src="{{ url_for('static', filename='/img/taco.png') }}" alt="Logo"></span>
+                </a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li><a href=annotate onclick="doClick(); return false;">Annotate</a></li>
+                    <li><a href="/uploadredirect">Upload</a></li>
+                    <li><a href="/library">Library</a></li>
+                    <li><a href="/searchredirect">Search</a></li>
+                    <li><a href="/#capabilities">Capabilities</a></li>
+                    <li><a href="/#process">Process</a></li>
+                    <li><a href="/#about">About</a></li>
+                </ul>
+                <!-- <div class="navbar-right">
+              <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/pedropro/TACO"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+              </ul>
+            </div> -->
+            </div>
+            <script>
+                function doClick() {
+                    window.location.href = "./annotate";
+
+                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile) {
+                        window.location.href = "./annotate_mobile";
+                    } else {
+                        window.location.href = "./annotate";
+                    }
+                }
+            </script>
+        </div>
+    </nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <style>
+                .control_panel {
+                    margin-bottom: 1em;
+                }
+                
+                .custom-select {
+                    margin-left: 1em;
+                    margin-right: 1em;
+                }
+                
+                .button {
+                    background-color: #E7EBEE;
+                    /* Green background */
+                    border: 1px solid #2A63FF;
+                    /* Green border */
+                    color: #2A63FF;
+                    /* White text */
+                    padding: 2px 24px;
+                    /* Some padding */
+                    cursor: pointer;
+                    /* Pointer/hand icon */
+                    float: left;
+                    /* Float the buttons side by side */
+                    margin-right: 0.2em;
+                    /* margin-bottom:1em; */
+                }
+                /* Add a background color on hover */
+                
+                .button:hover {
+                    background-color: #BCBEBF
+                }
+                
+                .custom-select {
+                    margin-bottom: 1em;
+                }
+                /* Clear floats (clearfix hack) */
+                
+                .btn-group:after {
+                    content: "";
+                    clear: both;
+                    display: table;
+                }
+            </style>
+        </div>
+    </div>
+
+    <body onload="load_image()">
+        <div class="container">
+            <p>Draw points over the contour of an object by pressing <strong>Left Click</strong> to insert a new point and click on the initial point to close the polygon. After adding all TACO objects in the image, press
+                <strong>submit</strong>.</p>
+            <p> <strong> Tips:</strong> Press <code>h</code> to switch between image resolutions. Undo by clicking on the last point. To edit/delete object click on the object label. If you have any doubts, check our <a href="./index"> FAQ section</a>.</p>
+            <hr>
+            <div class="control_panel" align="left">
+                <div class="btn-group" style="width:100%">
+                    <button class="button" style="width:20%" id="skip_btn" onclick="load_image()">  Skip Image >> </button>
+                    <button class="button" id="hr_button" onclick="change_resolution()">HR </button>
+                    <button onclick="showTutorial()" style="width:20%" class="button">Tutorial</button>
+                    <button class="button" style="width:20%" onclick="clear_canvas()"> Clear </button>
+                    <!-- <button onclick="undo()" style="width:20%" class="button">Undo</button> -->
+                    <button class="button" style="width:20%" onclick="submit_step_1()">  Submit </button>
+                </div>
+            </div>
+
+            <div id="object_btn_list"></div>
+
+            <div id="spinner" align="center"><img src="{{ url_for('static', filename='img/iconLoader.gif') }}"></img>
+            </div>
+
+            <canvas id="jPolygon" style="cursor:crosshair" data-imgsrc="img/annotation_test.JPG" onmousedown="point_it(event)" onmousemove="hover(event)" oncontextmenu="return false;">
+                Your browser does not support the HTML5 canvas tag.
+    </canvas>
+
+            <!-- Modal #0: Demo -->
+            <div id="modal_demo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <iframe width="560" height="315" src="https://www.youtube.com/embed/KHMBNvQxfiU" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal #1: Ask user to add object or continue segmenting it -->
+            <div class="modal fade bd-example-modal-sm" id="modal_1" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Are you done with this object?</h5>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Not yet</button>
+                            <button type="button" class="btn btn-success" onclick="add_object_step_1()">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End or Modal #1 -->
+
+            <!-- Modal #2: Object class? Is this litter? -->
+            <div class="modal fade bd-example-modal-sm" id="modal_2" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Adding object</h5>
+                            <hr>
+                        </div>
+                        <div class="modal-body">
+                            <div class="control_panel">
+                                <p class="lead">Object class
+                                    <font color="#ff0000">*</font> : </p>
+                                <!-- <strong>Class: </strong> -->
+                                <select id="option_cat" class="custom-select">
+                                  <option value ="">Class</option>
+                                  {% for class in classes %}
+                                    <option value="{{ class }}">{{ class }}</option>
+                                  {% endfor %}
+                                </select>
+                            </div>
+                            <p>
+                                <font color="#ff0000">*</font> If you are not sure check our <a href="./taxonomy" target="_blank">Taxonomy</a> or choose <strong>Unlabeled Litter</strong></p>
+                            <p class="lead">Is this litter?</p>
+                            <input type="radio" name="contex" value="litter"> Yes<br>
+                            <input type="radio" name="contex" value="notlitter"> No<br>
+                            <input type="radio" name="contex" value="unknown"> Don't know<br>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="add_object_step_2()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal #3: Image submission -->
+            <div class="modal fade" id="modal_3" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Submission</h5>
+                            <hr>
+                        </div>
+                        <div class="modal-body">
+                            <div class="control_panel">
+                                <p class="lead">Check all boxes that describe the background.</p>
+                                <form>
+                                    <input type="checkbox" id="vegetation" value="5"> Vegetation </br>
+                                    <input type="checkbox" id="road" value="2"> Pavement or road </br>
+                                    <input type="checkbox" id="sand" value="3"> Sand, dirt, rocks </br>
+                                    <input type="checkbox" id="water" value="6"> Water </br>
+                                    <input type="checkbox" id="trash" value="4"> Trash </br>
+                                    <input type="checkbox" id="indoor" value="1"> Indoor, man-made
+                                </form>
+                                <div>
+                                    </br>
+                                    <p class="lead">User details</p>
+                                    Username
+                                    <font color="#ff0000">*</font>: <input type="text" id="username" value=" ">
+                                    </br>
+                                    E-mail address
+                                    <font color="#ff0000">*</font>: <input type="text" id="email" value=" ">
+                                    </br>
+                                    <p>
+                                        <font color="#ff0000">*</font> Optional. If you want to be in our leaderboard and subscription list.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="submit_step_2()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal #4: Object editor -->
+            <div class="modal fade" id="modal_4" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Object annotation</h5>
+                            <hr>
+                        </div>
+                        <div class="modal-body">
+                            <div class="control_panel">
+                                <p class="lead">Object class
+                                    <font color="#ff0000">*</font> : </p>
+                                <!-- <strong>Class: </strong> -->
+                                <select id="option_cat_edit" class="custom-select"></select>
+                            </div>
+                            <p class="lead">Is this litter?</p>
+                            <input type="radio" name="contex_edit" value="litter" id="ctx_litter"> Yes<br>
+                            <input type="radio" name="contex_edit" value="notlitter" id="ctx_notlitter"> No<br>
+                            <input type="radio" name="contex_edit" value="unknown" id="ctx_unknown"> Don't know<br>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="delete_object()">Delete</button>
+                            <button type="button" class="btn btn-success" onclick="change_object_class()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <p id="jobs_counter">Jobs completed during this session: <code>0</code> </p>
+            </div>
+        </div>
+        <hr>
+        <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous">
+        </script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/annotator.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/load-image.all.min.js') }}"></script>
+    </body>
+
+    </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+
+            <p class="text-center">
+                &copy Pedro Proença 2021 | Powered by <a href="https://github.com/aksakalli/jekyll-doc-theme">Jekyll Doc Theme</a>
+            </p>
+            <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+        </div>
+    </footer>
+
+    <script>
+        var baseurl = ''
+    </script>
+    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="{{ url_for('static', filename='/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='/js/typeahead.bundle.min.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='/js/main.js') }}"></script>
+
+</body>
+
+</html>
